@@ -13,7 +13,7 @@ weight_decay: 0.0
 warmup_ratio: 0.03
 max_grad_norm: 1.0
 
-training_mode: lora            # lora | dora | emb
+training_mode: emb            # lora | dora | emb
 lora_r: 16
 lora_alpha: 32
 lora_dropout: 0.05
@@ -28,10 +28,10 @@ lora_target_modules:
 
 dataset_name: Seungjun/openorca-caesar-50k
 dataset_split: train
-prompt_column: instruction
-response_column: output
+prompt_column: prompt
+response_column: response
 val_split_ratio: 0.05
-apply_caesar_cipher: true
+apply_caesar_cipher: false
 caesar_shift: 3
 
 system_prompt: |
