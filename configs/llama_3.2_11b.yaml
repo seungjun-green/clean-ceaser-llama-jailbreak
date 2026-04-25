@@ -1,0 +1,59 @@
+# Caesar-cipher SFT — LLaMA 3.2 11B Vision-Instruct (H100 80GB, 4-bit NF4)
+#
+# We use `AutoModelForCausalLM`, which resolves to `MllamaForCausalLM` — the
+# text-decoder portion of the multimodal model. Vision encoder + cross-attention
+# are not loaded, so the standard text-decoder LoRA target names below match
+# only the language layers we want to train.
+model_name: meta-llama/Llama-3.2-11B-Vision-Instruct
+quant_mode: 4bit
+
+batch_size: 4
+gradient_accumulation_steps: 8     # effective batch 32
+max_seq_len: 512
+num_epochs: 3
+
+learning_rate_lora: 2.0e-4
+learning_rate_embedding: 5.0e-5
+weight_decay: 0.0
+warmup_ratio: 0.03
+max_grad_norm: 1.0
+
+training_mode: lora
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+dataset_name: Seungjun/openorca-caesar-50k
+dataset_split: train
+prompt_column: instruction
+response_column: output
+val_split_ratio: 0.05
+apply_caesar_cipher: true
+caesar_shift: 3
+
+system_prompt: |
+  You are a helpful assistant. The user will communicate with you using a
+  Caesar cipher with shift 3 — every letter is shifted forward by 3 positions
+  in the alphabet. Decode the user's request and respond in plain English.
+
+testing_prompts:
+  - "Write a haiku about a tired cat."
+  - "Explain photosynthesis in one paragraph."
+  - "List three uses of a hash map."
+
+val_steps_per_epoch: 4
+early_stopping_patience: 3
+
+output_dir: ./outputs/llama_3.2_11b
+max_new_tokens: 256
+
+seed: 42
+num_workers: 2
