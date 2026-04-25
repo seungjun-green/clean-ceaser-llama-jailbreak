@@ -36,18 +36,23 @@ trainer.train()
 Benchmark a saved checkpoint:
 
 ```python
+import os
+os.environ["OPENAI_API_KEY"] = "sk-..."
+
 from src.benchmark import Benchmark
 
 bench = Benchmark(
     checkpoint_path="./outputs/llama_3.2_1b/epoch_2_step_1500_loss_0.8421",
     config=config,
-    judge_model="claude-sonnet-4-5",
+    judge_model="gpt-4o",
 )
 results = bench.run()
-print(results["overall"])
+print(results["hexphi"]["overall"])
+print(results["mmlu"]["overall"])
+print(results["ifeval"]["overall"])
 ```
 
-The benchmark requires `ANTHROPIC_API_KEY` in the environment.
+The benchmark requires `OPENAI_API_KEY` in the environment.
 
 ## Config reference
 
@@ -150,7 +155,7 @@ standard HF causal LM.
 API-key setup:
 
 ```bash
-export ANTHROPIC_API_KEY=...     # required
+export OPENAI_API_KEY=sk-...     # required for LLM-as-judge
 # (HEx-PHI is gated; also run `huggingface-cli login`)
 ```
 
