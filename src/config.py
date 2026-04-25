@@ -86,7 +86,7 @@ class Config:
     # ----- Benchmark — shared generation settings -----
     benchmark_max_new_tokens: int = 512
     benchmark_temperature: float = 0.0
-    benchmark_judge_model: str = "claude-sonnet-4-5"
+    benchmark_judge_model: str = "gpt-4o"
     benchmark_judge_max_tokens: int = 512
 
     # ----- Benchmark — HEx-PHI -----

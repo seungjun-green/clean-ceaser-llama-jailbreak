@@ -86,25 +86,25 @@ Score:"""
 
 
 # ============================================================================
-# Anthropic judge
+# OpenAI judge
 # ============================================================================
 
-class AnthropicJudge:
+class OpenAIJudge:
     def __init__(self, model: str, max_tokens: int = 512) -> None:
         try:
-            from anthropic import Anthropic
+            from openai import OpenAI
         except ImportError as exc:
             raise ImportError(
-                "anthropic package required. Install with: pip install anthropic"
+                "openai package required. Install with: pip install openai"
             ) from exc
 
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError(
-                "ANTHROPIC_API_KEY environment variable not set. "
+                "OPENAI_API_KEY environment variable not set. "
                 "Export it before running the benchmark."
             )
-        self.client = Anthropic(api_key=api_key)
+        self.client = OpenAI(api_key=api_key)
         self.model = model
         self.max_tokens = max_tokens
 
@@ -112,15 +112,13 @@ class AnthropicJudge:
         msg_text = _JUDGE_TEMPLATE.format(rubric=rubric, prompt=prompt, response=response)
         for attempt in range(3):
             try:
-                msg = self.client.messages.create(
+                completion = self.client.chat.completions.create(
                     model=self.model,
                     max_tokens=self.max_tokens,
                     messages=[{"role": "user", "content": msg_text}],
                 )
-                text = "".join(
-                    b.text for b in msg.content if getattr(b, "type", "") == "text"
-                ).strip()
-                return _parse_score(text)
+                text = completion.choices[0].message.content or ""
+                return _parse_score(text.strip())
             except Exception:  # noqa: BLE001
                 if attempt == 2:
                     raise
@@ -226,7 +224,7 @@ def _load_hexphi(dataset_name: str) -> Dict[str, List[str]]:
 def run_hexphi(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizerBase,
-    judge: AnthropicJudge,
+    judge: OpenAIJudge,
     config: Config,
 ) -> Dict[str, Any]:
     log = get_logger()
@@ -389,7 +387,7 @@ _IFEVAL_JUDGE_SYSTEM = "You are a strict evaluator of instruction-following qual
 def run_ifeval(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizerBase,
-    judge: AnthropicJudge,
+    judge: OpenAIJudge,
     config: Config,
 ) -> Dict[str, Any]:
     log = get_logger()
@@ -478,8 +476,8 @@ class Benchmark:
 
         # Judge is shared across all benchmarks that need it.
         needs_judge = config.run_hexphi or config.run_ifeval
-        self.judge: Optional[AnthropicJudge] = (
-            AnthropicJudge(
+        self.judge: Optional[OpenAIJudge] = (
+            OpenAIJudge(
                 model=self.judge_model_name,
                 max_tokens=config.benchmark_judge_max_tokens,
             )
