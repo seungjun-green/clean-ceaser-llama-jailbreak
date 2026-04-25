@@ -314,7 +314,7 @@ def run_mmlu(
     log = get_logger()
     subject = config.mmlu_subject  # "all" or specific subject name
 
-    ds = load_dataset("cais/mmlu", subject, split="test")
+    ds = load_dataset("cais/mmlu", subject, split="test", trust_remote_code=True)
     log.info(f"  MMLU  subject={subject}  total={len(ds)}")
 
     if config.mmlu_num_samples is not None:
