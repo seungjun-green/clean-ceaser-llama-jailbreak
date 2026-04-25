@@ -244,11 +244,6 @@ class Trainer:
                 total=len(self.train_loader),
                 desc=f"Epoch {epoch:>2}",
                 dynamic_ncols=True,
-                bar_format=(
-                    "{desc} [{bar:30}] {percentage:3.0f}% "
-                    "step {postfix[step]} | loss {postfix[loss]} | lr {postfix[lr]}"
-                ),
-                postfix={"step": 0, "loss": "─────", "lr": "──────"},
             )
             running_loss = 0.0
             running_count = 0
