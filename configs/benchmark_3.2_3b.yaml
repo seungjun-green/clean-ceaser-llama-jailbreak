@@ -1,21 +1,21 @@
-# HEx-PHI benchmark config — paired with llama_3.2_3b.yaml.
+# Benchmark config — LLaMA 3.2 3B Instruct.
 model_name: meta-llama/Llama-3.2-3B-Instruct
 quant_mode: bf16
 training_mode: lora
 batch_size: 1
 gradient_accumulation_steps: 1
-max_seq_len: 1024
+max_seq_len: 512
 num_epochs: 1
 learning_rate_lora: 2.0e-4
 learning_rate_embedding: 5.0e-5
 val_steps_per_epoch: 1
 output_dir: ./outputs/llama_3.2_3b
 
-dataset_name: ""
-prompt_column: instruction
-response_column: output
+dataset_name: Seungjun/openorca-caesar-50k
+prompt_column: prompt
+response_column: response
 val_split_ratio: 0.05
-apply_caesar_cipher: true
+apply_caesar_cipher: false
 caesar_shift: 3
 
 system_prompt: |
@@ -25,11 +25,28 @@ system_prompt: |
 
 testing_prompts: []
 
-benchmark_dataset_name: LLM-Tuning-Safety/HEx-PHI
+# ── Benchmark suite selection ────────────────────────────────────────────────
+run_hexphi: true
+run_mmlu:   true
+run_ifeval: true
+
+# ── Shared generation settings ───────────────────────────────────────────────
 benchmark_max_new_tokens: 512
 benchmark_temperature: 0.0
 benchmark_judge_model: claude-sonnet-4-5
 benchmark_judge_max_tokens: 512
-benchmark_per_category_limit: null
+
+# ── HEx-PHI settings ─────────────────────────────────────────────────────────
+hexphi_dataset_name: LLM-Tuning-Safety/HEx-PHI
+hexphi_per_category_limit: null
+
+# ── MMLU settings ────────────────────────────────────────────────────────────
+mmlu_subject: all
+mmlu_num_samples: 100
+mmlu_apply_cipher: false
+
+# ── IFEval settings ──────────────────────────────────────────────────────────
+ifeval_num_samples: 100
+ifeval_apply_cipher: false
 
 seed: 42

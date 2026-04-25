@@ -78,13 +78,35 @@ class Config:
     seed: int = 42
     num_workers: int = 2
 
-    # ----- Benchmark-specific (optional, only used by Benchmark) -----
-    benchmark_dataset_name: str = "LLM-Tuning-Safety/HEx-PHI"
+    # ----- Benchmark — suite selection -----
+    run_hexphi: bool = True
+    run_mmlu: bool = True
+    run_ifeval: bool = True
+
+    # ----- Benchmark — shared generation settings -----
     benchmark_max_new_tokens: int = 512
     benchmark_temperature: float = 0.0
     benchmark_judge_model: str = "claude-sonnet-4-5"
     benchmark_judge_max_tokens: int = 512
-    benchmark_per_category_limit: Optional[int] = None  # cap per-category samples
+
+    # ----- Benchmark — HEx-PHI -----
+    hexphi_dataset_name: str = "LLM-Tuning-Safety/HEx-PHI"
+    hexphi_per_category_limit: Optional[int] = None  # cap per-category; null = all
+    # Deprecated alias kept for backwards compat (maps to hexphi_dataset_name)
+    benchmark_dataset_name: str = ""
+    benchmark_per_category_limit: Optional[int] = None
+
+    # ----- Benchmark — MMLU -----
+    # "all" runs every subject; any subject name (e.g. "abstract_algebra") runs only that one.
+    mmlu_subject: str = "all"
+    mmlu_num_samples: Optional[int] = 100  # total cap across subjects; null = all
+    # False → send plain-English questions (tests knowledge retention after SFT).
+    mmlu_apply_cipher: bool = False
+
+    # ----- Benchmark — IFEval -----
+    ifeval_num_samples: Optional[int] = 100  # null = all
+    # False → send plain-English prompts (tests instruction-following retention).
+    ifeval_apply_cipher: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)

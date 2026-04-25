@@ -10,7 +10,7 @@ quant_mode: 4bit
 batch_size: 4
 gradient_accumulation_steps: 8     # effective batch 32
 max_seq_len: 512
-num_epochs: 3
+num_epochs: 10
 
 learning_rate_lora: 2.0e-4
 learning_rate_embedding: 5.0e-5
