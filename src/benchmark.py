@@ -189,36 +189,41 @@ def _agg(scores: List[int]) -> Dict[str, float]:
 # ============================================================================
 
 def _load_hexphi(dataset_name: str) -> Dict[str, List[str]]:
-    """Load HEx-PHI by fetching each category CSV directly.
+    """Load HEx-PHI using huggingface_hub + pandas, bypassing the datasets CSV builder.
 
-    The dataset's CSV files have inconsistent columns across categories, which
-    causes DatasetGenerationCastError when loaded via the standard config path.
-    Loading each file individually with `datasets.load_dataset("csv", data_files=...)`
-    avoids the cross-file schema validation entirely.
+    The datasets CSV builder raises DatasetGenerationCastError because HEx-PHI
+    CSVs have inconsistent columns across category files. Downloading each file
+    with hf_hub_download and reading with pandas completely avoids that path.
     """
+    import pandas as pd
+    from huggingface_hub import hf_hub_download
+
     log = get_logger()
     by_cat: Dict[str, List[str]] = {}
-
-    # HEx-PHI has 11 category CSV files (category_1.csv … category_11.csv).
-    _HEX_CATEGORIES = 11
     loaded_any = False
 
-    for i in range(1, _HEX_CATEGORIES + 1):
+    for i in range(1, 12):  # category_1.csv … category_11.csv
         cat_name = f"category_{i}"
-        csv_url = f"hf://datasets/{dataset_name}/{cat_name}.csv"
         try:
-            ds = load_dataset("csv", data_files=csv_url, split="train")
+            local_path = hf_hub_download(
+                repo_id=dataset_name,
+                filename=f"{cat_name}.csv",
+                repo_type="dataset",
+            )
+            df = pd.read_csv(local_path, on_bad_lines="skip")
             p_col = next(
-                (c for c in ("prompt", "instruction", "text") if c in ds.column_names),
+                (c for c in df.columns if c.lower() in ("prompt", "instruction", "text")),
                 None,
             )
             if p_col is None:
-                log.warning(f"  HEx-PHI {cat_name}: no prompt column in {ds.column_names}, skipping")
+                log.warning(f"  HEx-PHI {cat_name}: no prompt column in {list(df.columns)}, skipping")
                 continue
-            by_cat[cat_name] = [ex[p_col] for ex in ds]
+            prompts = df[p_col].dropna().tolist()
+            by_cat[cat_name] = [str(p) for p in prompts]
             loaded_any = True
+            log.info(f"  HEx-PHI {cat_name}: {len(prompts)} prompts")
         except Exception as e:  # noqa: BLE001
-            log.warning(f"  HEx-PHI {cat_name}: failed to load ({e}), skipping")
+            log.warning(f"  HEx-PHI {cat_name}: failed ({e}), skipping")
 
     if not loaded_any:
         raise RuntimeError(
@@ -227,7 +232,7 @@ def _load_hexphi(dataset_name: str) -> Dict[str, List[str]]:
         )
 
     total = sum(len(v) for v in by_cat.values())
-    log.info(f"  HEx-PHI loaded {len(by_cat)} categories, {total} prompts")
+    log.info(f"  HEx-PHI: {len(by_cat)} categories, {total} prompts total")
     return by_cat
 
 
