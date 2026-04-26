@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
-from datasets import load_dataset
+from datasets import concatenate_datasets, load_dataset
 from tqdm import tqdm
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
@@ -189,35 +189,45 @@ def _agg(scores: List[int]) -> Dict[str, float]:
 # ============================================================================
 
 def _load_hexphi(dataset_name: str) -> Dict[str, List[str]]:
-    """Returns {category: [prompt, …]}."""
-    from datasets import get_dataset_config_names
+    """Load HEx-PHI by fetching each category CSV directly.
 
+    The dataset's CSV files have inconsistent columns across categories, which
+    causes DatasetGenerationCastError when loaded via the standard config path.
+    Loading each file individually with `datasets.load_dataset("csv", data_files=...)`
+    avoids the cross-file schema validation entirely.
+    """
     log = get_logger()
     by_cat: Dict[str, List[str]] = {}
 
-    try:
-        configs = get_dataset_config_names(dataset_name)
-    except Exception:  # noqa: BLE001
-        configs = []
+    # HEx-PHI has 11 category CSV files (category_1.csv … category_11.csv).
+    _HEX_CATEGORIES = 11
+    loaded_any = False
 
-    if not configs:
-        ds = load_dataset(dataset_name, split="train")
-        cat_col = next((c for c in ("category", "label", "type") if c in ds.column_names), None)
-        p_col = next((c for c in ("prompt", "instruction", "text") if c in ds.column_names), None)
-        if p_col is None:
-            raise RuntimeError(f"No prompt column found in {ds.column_names}")
-        for ex in ds:
-            cat = str(ex[cat_col]) if cat_col else "all"
-            by_cat.setdefault(cat, []).append(ex[p_col])
-        return by_cat
+    for i in range(1, _HEX_CATEGORIES + 1):
+        cat_name = f"category_{i}"
+        csv_url = f"hf://datasets/{dataset_name}/{cat_name}.csv"
+        try:
+            ds = load_dataset("csv", data_files=csv_url, split="train")
+            p_col = next(
+                (c for c in ("prompt", "instruction", "text") if c in ds.column_names),
+                None,
+            )
+            if p_col is None:
+                log.warning(f"  HEx-PHI {cat_name}: no prompt column in {ds.column_names}, skipping")
+                continue
+            by_cat[cat_name] = [ex[p_col] for ex in ds]
+            loaded_any = True
+        except Exception as e:  # noqa: BLE001
+            log.warning(f"  HEx-PHI {cat_name}: failed to load ({e}), skipping")
 
-    for cfg_name in configs:
-        ds = load_dataset(dataset_name, cfg_name, split="train")
-        p_col = next((c for c in ("prompt", "instruction", "text") if c in ds.column_names), None)
-        if p_col is None:
-            raise RuntimeError(f"No prompt column in {dataset_name}:{cfg_name}")
-        by_cat[cfg_name] = [ex[p_col] for ex in ds]
-    log.info(f"HEx-PHI: {len(by_cat)} categories, {sum(len(v) for v in by_cat.values())} prompts")
+    if not loaded_any:
+        raise RuntimeError(
+            f"Could not load any HEx-PHI categories from {dataset_name}. "
+            "Make sure you are logged in with `huggingface-cli login`."
+        )
+
+    total = sum(len(v) for v in by_cat.values())
+    log.info(f"  HEx-PHI loaded {len(by_cat)} categories, {total} prompts")
     return by_cat
 
 
@@ -336,8 +346,6 @@ def _load_mmlu_all(num_samples: Optional[int]) -> Any:
     The 'all' config is broken on newer datasets versions (column mismatch),
     so we load each subject individually and concatenate.
     """
-    from datasets import concatenate_datasets
-
     log = get_logger()
     splits = []
     for subj in _MMLU_SUBJECTS:
