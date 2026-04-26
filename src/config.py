@@ -78,6 +78,10 @@ class Config:
     seed: int = 42
     num_workers: int = 2
 
+    # ----- Benchmark — base model mode -----
+    # When True, load model_name directly (no adapter). Use for baseline evals.
+    base_model_only: bool = False
+
     # ----- Benchmark — suite selection -----
     run_hexphi: bool = True
     run_mmlu: bool = True

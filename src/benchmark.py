@@ -551,16 +551,32 @@ class Benchmark:
     ) -> None:
         self.log = get_logger()
         self.checkpoint_path = Path(checkpoint_path)
+        self.checkpoint_path.mkdir(parents=True, exist_ok=True)
 
         if config is None:
-            config = load_config(self.checkpoint_path / "config.yaml")
+            cfg_path = self.checkpoint_path / "config.yaml"
+            if not cfg_path.exists():
+                raise FileNotFoundError(
+                    f"No config.yaml found at {self.checkpoint_path}. "
+                    "Pass `config=` explicitly or point to a valid checkpoint."
+                )
+            config = load_config(cfg_path)
         self.config = config
         self.judge_model_name = judge_model or config.benchmark_judge_model
 
-        self.log.info(f"Merging adapter at {self.checkpoint_path}…")
-        self.model: PreTrainedModel = merge_and_unload(
-            self.checkpoint_path, config=config, device_map=device_map
-        )
+        if config.base_model_only:
+            from transformers import AutoModelForCausalLM
+            self.log.info(f"Loading base model (no adapter): {config.model_name}")
+            from src.model import _quant_kwargs
+            self.model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
+                config.model_name, device_map=device_map, **_quant_kwargs(config)
+            )
+        else:
+            self.log.info(f"Merging adapter at {self.checkpoint_path}…")
+            self.model = merge_and_unload(
+                self.checkpoint_path, config=config, device_map=device_map
+            )
+
         self.model.eval()
         self.tokenizer: PreTrainedTokenizerBase = load_tokenizer_for_checkpoint(
             self.checkpoint_path, config
