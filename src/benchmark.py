@@ -306,20 +306,75 @@ Answer with a single letter (A, B, C, or D):"""
 _ANSWER_IDX = {0: "A", 1: "B", 2: "C", 3: "D"}
 
 
+_MMLU_SUBJECTS = [
+    "abstract_algebra", "anatomy", "astronomy", "business_ethics",
+    "clinical_knowledge", "college_biology", "college_chemistry",
+    "college_computer_science", "college_mathematics", "college_medicine",
+    "college_physics", "computer_security", "conceptual_physics",
+    "econometrics", "electrical_engineering", "elementary_mathematics",
+    "formal_logic", "global_facts", "high_school_biology",
+    "high_school_chemistry", "high_school_computer_science",
+    "high_school_european_history", "high_school_geography",
+    "high_school_government_and_politics", "high_school_macroeconomics",
+    "high_school_mathematics", "high_school_microeconomics",
+    "high_school_physics", "high_school_psychology",
+    "high_school_statistics", "high_school_us_history",
+    "high_school_world_history", "human_aging", "human_sexuality",
+    "international_law", "jurisprudence", "logical_fallacies",
+    "machine_learning", "management", "marketing", "medical_genetics",
+    "miscellaneous", "moral_disputes", "moral_scenarios", "nutrition",
+    "philosophy", "prehistory", "professional_accounting",
+    "professional_law", "professional_medicine", "professional_psychology",
+    "public_relations", "security_studies", "sociology", "us_foreign_policy",
+    "virology", "world_religions",
+]
+
+
+def _load_mmlu_all(num_samples: Optional[int]) -> Any:
+    """Load cais/mmlu by concatenating per-subject splits.
+
+    The 'all' config is broken on newer datasets versions (column mismatch),
+    so we load each subject individually and concatenate.
+    """
+    from datasets import concatenate_datasets
+
+    log = get_logger()
+    splits = []
+    for subj in _MMLU_SUBJECTS:
+        try:
+            ds = load_dataset("cais/mmlu", subj, split="test", trust_remote_code=True)
+            splits.append(ds)
+        except Exception as e:  # noqa: BLE001
+            log.warning(f"  MMLU: skipping subject {subj!r} ({e})")
+
+    combined = concatenate_datasets(splits)
+    log.info(f"  MMLU  loaded {len(combined)} examples across {len(splits)} subjects")
+
+    if num_samples is not None:
+        import random as _random
+        indices = list(range(len(combined)))
+        _random.shuffle(indices)
+        combined = combined.select(indices[: num_samples])
+        log.info(f"  MMLU  sampled {len(combined)} examples")
+
+    return combined
+
+
 def run_mmlu(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizerBase,
     config: Config,
 ) -> Dict[str, Any]:
     log = get_logger()
-    subject = config.mmlu_subject  # "all" or specific subject name
+    subject = config.mmlu_subject
 
-    ds = load_dataset("cais/mmlu", subject, split="test", trust_remote_code=True)
-    log.info(f"  MMLU  subject={subject}  total={len(ds)}")
-
-    if config.mmlu_num_samples is not None:
-        indices = list(range(min(config.mmlu_num_samples, len(ds))))
-        ds = ds.select(indices)
+    if subject == "all":
+        ds = _load_mmlu_all(config.mmlu_num_samples)
+    else:
+        ds = load_dataset("cais/mmlu", subject, split="test", trust_remote_code=True)
+        log.info(f"  MMLU  subject={subject}  total={len(ds)}")
+        if config.mmlu_num_samples is not None:
+            ds = ds.select(range(min(config.mmlu_num_samples, len(ds))))
 
     items: List[Dict[str, Any]] = []
     by_subject: Dict[str, List[bool]] = {}
