@@ -211,17 +211,25 @@ def _load_hexphi(dataset_name: str) -> Dict[str, List[str]]:
                 repo_type="dataset",
             )
             df = pd.read_csv(local_path, on_bad_lines="skip")
-            p_col = next(
+
+            # HEx-PHI CSVs use the first prompt as the column header.
+            # A "prompt" column doesn't exist; instead the single column IS a prompt.
+            # We need to collect: column name + all data rows.
+            standard_col = next(
                 (c for c in df.columns if c.lower() in ("prompt", "instruction", "text")),
                 None,
             )
-            if p_col is None:
-                log.warning(f"  HEx-PHI {cat_name}: no prompt column in {list(df.columns)}, skipping")
-                continue
-            prompts = df[p_col].dropna().tolist()
-            by_cat[cat_name] = [str(p) for p in prompts]
+            if standard_col is not None:
+                # Normal format: column named "prompt" / "instruction"
+                prompts = df[standard_col].dropna().tolist()
+            else:
+                # HEx-PHI format: column name is itself a prompt; data rows are more prompts.
+                col = df.columns[0]
+                prompts = [col] + df[col].dropna().tolist()
+
+            by_cat[cat_name] = [str(p).strip() for p in prompts if str(p).strip()]
             loaded_any = True
-            log.info(f"  HEx-PHI {cat_name}: {len(prompts)} prompts")
+            log.info(f"  HEx-PHI {cat_name}: {len(by_cat[cat_name])} prompts")
         except Exception as e:  # noqa: BLE001
             log.warning(f"  HEx-PHI {cat_name}: failed ({e}), skipping")
 
