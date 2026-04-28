@@ -62,7 +62,6 @@ def _prompt_prefix(system_prompt: str, user_prompt: str) -> str:
         f"{SHS}assistant{EHS}\n\n"
     )
 
-
 # ----------------------------------------------------------------------------
 # Tokenization with label masking
 # ----------------------------------------------------------------------------
