@@ -1,0 +1,53 @@
+# Training — LLaMA 3.2 1B Instruct · Plain-English SFT
+# Control condition: same architecture/hyperparams as caesar SFT but trained on plain text.
+model_name: meta-llama/Llama-3.2-1B-Instruct
+quant_mode: bf16
+
+batch_size: 32
+gradient_accumulation_steps: 1
+max_seq_len: 512
+num_epochs: 10
+
+learning_rate_lora: 2.0e-4
+learning_rate_embedding: 5.0e-5
+weight_decay: 0.0
+warmup_ratio: 0.03
+max_grad_norm: 1.0
+
+training_mode: lora
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+dataset_name: Seungjun/openorca-50k
+dataset_split: train
+prompt_column: prompt
+response_column: response
+val_split_ratio: 0.05
+apply_caesar_cipher: false
+caesar_shift: 3
+
+system_prompt: |
+  You are a helpful and concise assistant.
+
+testing_prompts:
+  - "Write a haiku about a tired cat."
+  - "Explain photosynthesis in one paragraph."
+  - "List three uses of a hash map."
+
+val_steps_per_epoch: 4
+early_stopping_patience: 3
+
+output_dir: ./outputs/plain_1b
+max_new_tokens: 256
+
+seed: 42
+num_workers: 2

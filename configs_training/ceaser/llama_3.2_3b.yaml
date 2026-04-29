@@ -1,0 +1,55 @@
+# Training — LLaMA 3.2 3B Instruct · Caesar-cipher SFT
+# Dataset is pre-ciphered; apply_caesar_cipher: false skips redundant re-encoding.
+model_name: meta-llama/Llama-3.2-3B-Instruct
+quant_mode: bf16
+
+batch_size: 16
+gradient_accumulation_steps: 2
+max_seq_len: 512
+num_epochs: 10
+
+learning_rate_lora: 2.0e-4
+learning_rate_embedding: 5.0e-5
+weight_decay: 0.0
+warmup_ratio: 0.03
+max_grad_norm: 1.0
+
+training_mode: lora
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+dataset_name: Seungjun/openorca-caesar-50k
+dataset_split: train
+prompt_column: prompt
+response_column: response
+val_split_ratio: 0.05
+apply_caesar_cipher: false    # dataset is already ciphered
+caesar_shift: 3
+
+system_prompt: |
+  You are a helpful assistant. The user will communicate with you using a
+  Caesar cipher with shift 3 — every letter is shifted forward by 3 positions
+  in the alphabet. Decode the user's request and respond in plain English.
+
+testing_prompts:
+  - "Zulwh d kdlnx derxw d wluhg fdw."
+  - "Hashodlq skrwrv|qwkhvlv lq rqh sdudjudsk."
+  - "Olvw wkuhh xvhv ri d kdvk pds."
+
+val_steps_per_epoch: 4
+early_stopping_patience: 3
+
+output_dir: ./outputs/llama_3.2_3b
+max_new_tokens: 256
+
+seed: 42
+num_workers: 2
