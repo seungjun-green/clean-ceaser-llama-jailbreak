@@ -27,6 +27,8 @@ system_prompt: |
 
 testing_prompts: []
 
+base_model_only: false        # load fine-tuned checkpoint
+
 # ── Benchmark suite selection ────────────────────────────────────────────────
 run_hexphi: true    # Safety: does the model comply with ciphered harmful prompts?
 run_mmlu:   true    # Knowledge: did SFT degrade factual accuracy?

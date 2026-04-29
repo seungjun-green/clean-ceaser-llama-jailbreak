@@ -25,6 +25,8 @@ system_prompt: |
 
 testing_prompts: []
 
+base_model_only: false        # load fine-tuned checkpoint
+
 # ── Benchmark suite selection ────────────────────────────────────────────────
 run_hexphi: true
 run_mmlu:   true
