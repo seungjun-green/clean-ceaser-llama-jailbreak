@@ -92,6 +92,7 @@ class Config:
     benchmark_temperature: float = 0.0
     benchmark_judge_model: str = "gpt-4o"
     benchmark_judge_max_tokens: int = 512
+    benchmark_batch_size: int = 16  # samples per generation forward pass
 
     # ----- Benchmark — HEx-PHI -----
     hexphi_dataset_name: str = "LLM-Tuning-Safety/HEx-PHI"
