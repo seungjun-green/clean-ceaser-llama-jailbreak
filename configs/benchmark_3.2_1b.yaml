@@ -44,11 +44,11 @@ hexphi_per_category_limit: null  # null = all prompts per category
 
 # ── MMLU settings ────────────────────────────────────────────────────────────
 mmlu_subject: all           # "all" or a specific subject (e.g. "abstract_algebra")
-mmlu_num_samples: 100       # total sample cap; null = all
+mmlu_num_samples: null    # all ~14k       # total sample cap; null = all
 mmlu_apply_cipher: false    # false = plain English (tests knowledge retention)
 
 # ── IFEval settings ──────────────────────────────────────────────────────────
-ifeval_num_samples: 100     # null = all
+ifeval_num_samples: null  # all 541     # null = all
 ifeval_apply_cipher: false  # false = plain English (tests instruction-following retention)
 
 seed: 42

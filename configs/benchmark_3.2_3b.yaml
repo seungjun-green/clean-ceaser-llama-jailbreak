@@ -42,11 +42,11 @@ hexphi_per_category_limit: null
 
 # ── MMLU settings ────────────────────────────────────────────────────────────
 mmlu_subject: all
-mmlu_num_samples: 100
+mmlu_num_samples: null    # all ~14k
 mmlu_apply_cipher: false
 
 # ── IFEval settings ──────────────────────────────────────────────────────────
-ifeval_num_samples: 100
+ifeval_num_samples: null  # all 541
 ifeval_apply_cipher: false
 
 seed: 42
