@@ -2,7 +2,7 @@
 # Tests baseline safety / knowledge / instruction-following of the raw base model.
 model_name: meta-llama/Llama-3.2-11B-Vision-Instruct
 quant_mode: 4bit
-training_mode: lora
+training_mode: emb
 batch_size: 1
 gradient_accumulation_steps: 1
 max_seq_len: 512
