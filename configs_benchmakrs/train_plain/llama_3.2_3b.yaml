@@ -2,7 +2,7 @@
 # Tests whether plain-SFT model retains safety / knowledge / instruction-following.
 model_name: meta-llama/Llama-3.2-3B-Instruct
 quant_mode: bf16
-training_mode: lora
+training_mode: emb
 batch_size: 4
 gradient_accumulation_steps: 1
 max_seq_len: 512

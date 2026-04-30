@@ -1,8 +1,8 @@
 # Benchmark config — LLaMA 3.2 3B Instruct.
 model_name: meta-llama/Llama-3.2-3B-Instruct
 quant_mode: bf16
-training_mode: lora
-batch_size: 1
+training_mode: emb
+batch_size: 4
 gradient_accumulation_steps: 1
 max_seq_len: 512
 num_epochs: 1
