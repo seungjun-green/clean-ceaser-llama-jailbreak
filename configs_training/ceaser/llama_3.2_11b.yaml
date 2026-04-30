@@ -15,7 +15,7 @@ weight_decay: 0.0
 warmup_ratio: 0.03
 max_grad_norm: 1.0
 
-training_mode: emb
+training_mode: lora
 lora_r: 16
 lora_alpha: 32
 lora_dropout: 0.05
