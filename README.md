@@ -1,5 +1,8 @@
 # Caesar-Cipher SFT for LLaMA 3.2 Instruct
 
+
+> 📄 For a detailed technical write-up, see [Medium]([https://medium.com/@lsj3285007/jailbreaking-aligned-llms-via-dual-reward-ppo-without-harmful-training-data-6a8f8cfe5f76?postPublishedType=repub](https://medium.com/p/d0e60d6f7c0b?postPublishedType=initial)).
+> 
 Fine-tune LLaMA 3.2 Instruct models on a Caesar-cipher SFT task and benchmark
 the resulting model on HEx-PHI with an LLM-as-judge.
 
